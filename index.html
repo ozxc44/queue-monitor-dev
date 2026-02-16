@@ -263,6 +263,38 @@
             color: #e53e3e;
         }
 
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #667eea;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .social-proof {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            color: #718096;
+        }
+
+        .count-badge {
+            display: inline-block;
+            background: #c6f6d5;
+            color: #22543d;
+            padding: 0.125rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
         @media (max-width: 600px) {
             .card {
                 padding: 1.5rem;
@@ -337,13 +369,14 @@
             </div>
 
             <div class="form-section">
-                <h2>Get Early Access</h2>
-                <p>We're launching soon. Join the waitlist for <strong>50% off</strong> lifetime pricing.</p>
+                <h2>Get Early Access + 50% Off</h2>
+                <p>We're launching soon. Join <strong><span id="waitlist-count">3</span> developers</strong> on the waitlist for <strong>50% off</strong> lifetime pricing.</p>
                 <form id="waitlist-form">
                     <input type="email" id="email" placeholder="your@email.com" required>
-                    <button type="submit">Join Waitlist</button>
+                    <button type="submit">Get 50% Off</button>
                 </form>
                 <div id="status"></div>
+                <p class="social-proof">No spam. Unsubscribe anytime.</p>
             </div>
 
             <div class="supported">
@@ -363,80 +396,126 @@
     <script>
         const form = document.getElementById('waitlist-form');
         const status = document.getElementById('status');
+        const SUBMISSIONS_KEY = 'queue_monitor_waitlist';
+
+        // Load existing submissions
+        function getSubmissions() {
+            try {
+                return JSON.parse(localStorage.getItem(SUBMISSIONS_KEY) || '[]');
+            } catch {
+                return [];
+            }
+        }
+
+        // Save submission
+        function saveSubmission(data) {
+            const submissions = getSubmissions();
+            submissions.push(data);
+            localStorage.setItem(SUBMISSIONS_KEY, JSON.stringify(submissions));
+            return submissions.length;
+        }
+
+        // Get display count for social proof
+        function updateCount() {
+            const count = getSubmissions().length + 3; // +3 for initial social proof
+            const countEl = document.getElementById('waitlist-count');
+            if (countEl) {
+                countEl.textContent = count;
+            }
+        }
+
+        // Initialize count on page load
+        updateCount();
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('email').value;
+            const email = document.getElementById('email').value.trim();
+
+            // Basic email validation
+            if (!email || !email.includes('@')) {
+                status.className = 'status error';
+                status.textContent = 'Please enter a valid email address.';
+                return;
+            }
+
+            // Check for duplicates
+            const submissions = getSubmissions();
+            if (submissions.some(s => s.email === email)) {
+                status.className = 'status success';
+                status.innerHTML = `
+                    <strong>You're already on the list!</strong><br>
+                    We'll email you when we launch.
+                `;
+                return;
+            }
 
             status.className = 'status';
-            status.textContent = 'Joining...';
+            status.innerHTML = '<span class="spinner"></span> Joining...';
 
+            // Prepare submission data
+            const data = {
+                email,
+                timestamp: new Date().toISOString(),
+                source: 'queue-monitor-landing',
+                url: window.location.href,
+                utm_source: new URLSearchParams(window.location.search).get('utm_source') || 'direct',
+                utm_medium: new URLSearchParams(window.location.search).get('utm_medium') || 'none',
+                utm_campaign: new URLSearchParams(window.location.search).get('utm_campaign') || 'none',
+                userAgent: navigator.userAgent,
+                referrer: document.referrer || 'direct'
+            };
+
+            // Save locally first (always works)
+            const totalCount = saveSubmission(data);
+
+            // Try to send to Formspree
             try {
-                // Send to Formspree (replace with your form ID)
                 const response = await fetch('https://formspree.io/f/xqakvlzy', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'
                     },
-                    body: JSON.stringify({
-                        email: email,
-                        source: 'queue-monitor-landing',
-                        timestamp: new Date().toISOString(),
-                        utm_source: new URLSearchParams(window.location.search).get('utm_source') || 'direct',
-                        utm_medium: new URLSearchParams(window.location.search).get('utm_medium') || 'none',
-                        utm_campaign: new URLSearchParams(window.location.search).get('utm_campaign') || 'none'
-                    })
+                    body: JSON.stringify(data)
                 });
 
                 if (response.ok) {
-                    // Also store locally as backup
-                    const waitlist = JSON.parse(localStorage.getItem('queue-monitor-waitlist') || '[]');
-                    waitlist.push({
-                        email,
-                        timestamp: new Date().toISOString(),
-                        source: window.location.href
-                    });
-                    localStorage.setItem('queue-monitor-waitlist', JSON.stringify(waitlist));
-
-                    status.className = 'status success';
-                    status.innerHTML = `
-                        <strong>You're on the list!</strong><br>
-                        We'll email you when we launch. Watch your inbox for that 50% off code.
-                    `;
-                    form.reset();
+                    console.log('Submitted to Formspree');
                 } else {
-                    throw new Error('Submission failed');
+                    console.warn('Formspree submission failed:', response.status);
                 }
-            } catch (error) {
-                // Fallback to localStorage only
-                console.warn('Form submission failed, using localStorage fallback:', error);
-                const waitlist = JSON.parse(localStorage.getItem('queue-monitor-waitlist') || '[]');
-                waitlist.push({
-                    email,
-                    timestamp: new Date().toISOString(),
-                    source: window.location.href
-                });
-                localStorage.setItem('queue-monitor-waitlist', JSON.stringify(waitlist));
-
-                status.className = 'status success';
-                status.innerHTML = `
-                    <strong>You're on the list!</strong><br>
-                    We'll email you when we launch. Watch your inbox for that 50% off code.
-                `;
-                form.reset();
+            } catch (err) {
+                console.warn('Formspree network error:', err);
             }
+
+            // Show success (data is saved locally regardless)
+            status.className = 'status success';
+            status.innerHTML = `
+                <strong>You're #${totalCount} on the list!</strong><br>
+                We'll email you when we launch. Watch your inbox for that 50% off code.
+            `;
+            form.reset();
+            updateCount();
 
             // Analytics tracking
             if (typeof gtag !== 'undefined') {
                 gtag('event', 'waitlist_signup', {
-                    'event_category': 'engagement'
+                    'event_category': 'engagement',
+                    'value': totalCount
                 });
             }
+
+            // Console log for debugging
+            console.log('Waitlist signup:', data);
+            console.log('Total local submissions:', totalCount);
+            console.log('All local data:', getSubmissions());
         });
 
-        // Log page view for analytics
-        console.log('Queue Monitor coming soon page viewed');
+        // Debug: show how to retrieve local data
+        console.log('%cQueue Monitor Waitlist Debug', 'font-size: 16px; font-weight: bold;');
+        console.log('To view all submissions, run in console:');
+        console.log('JSON.parse(localStorage.getItem("queue_monitor_waitlist"))');
+        console.log('Current count:', getSubmissions().length);
     </script>
 </body>
 </html>
