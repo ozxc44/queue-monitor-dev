@@ -352,28 +352,63 @@
             status.className = 'status';
             status.textContent = 'Joining...';
 
-            // In production, this would send to your backend
-            // For now, we'll log to console and show success
-            console.log('Waitlist signup:', email);
+            try {
+                // Send to Formspree (replace with your form ID)
+                const response = await fetch('https://formspree.io/f/xqakvlzy', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        source: 'queue-monitor-landing',
+                        timestamp: new Date().toISOString(),
+                        utm_source: new URLSearchParams(window.location.search).get('utm_source') || 'direct',
+                        utm_medium: new URLSearchParams(window.location.search).get('utm_medium') || 'none',
+                        utm_campaign: new URLSearchParams(window.location.search).get('utm_campaign') || 'none'
+                    })
+                });
 
-            // Store in localStorage for demo purposes
-            const waitlist = JSON.parse(localStorage.getItem('queue-monitor-waitlist') || '[]');
-            waitlist.push({
-                email,
-                timestamp: new Date().toISOString(),
-                source: window.location.href
-            });
-            localStorage.setItem('queue-monitor-waitlist', JSON.stringify(waitlist));
+                if (response.ok) {
+                    // Also store locally as backup
+                    const waitlist = JSON.parse(localStorage.getItem('queue-monitor-waitlist') || '[]');
+                    waitlist.push({
+                        email,
+                        timestamp: new Date().toISOString(),
+                        source: window.location.href
+                    });
+                    localStorage.setItem('queue-monitor-waitlist', JSON.stringify(waitlist));
 
-            status.className = 'status success';
-            status.innerHTML = `
-                <strong>You're on the list!</strong><br>
-                We'll email you when we launch. Watch your inbox for that 50% off code.
-            `;
+                    status.className = 'status success';
+                    status.innerHTML = `
+                        <strong>You're on the list!</strong><br>
+                        We'll email you when we launch. Watch your inbox for that 50% off code.
+                    `;
+                    form.reset();
+                } else {
+                    throw new Error('Submission failed');
+                }
+            } catch (error) {
+                // Fallback to localStorage only
+                console.warn('Form submission failed, using localStorage fallback:', error);
+                const waitlist = JSON.parse(localStorage.getItem('queue-monitor-waitlist') || '[]');
+                waitlist.push({
+                    email,
+                    timestamp: new Date().toISOString(),
+                    source: window.location.href
+                });
+                localStorage.setItem('queue-monitor-waitlist', JSON.stringify(waitlist));
 
-            form.reset();
+                status.className = 'status success';
+                status.innerHTML = `
+                    <strong>You're on the list!</strong><br>
+                    We'll email you when we launch. Watch your inbox for that 50% off code.
+                `;
+                form.reset();
+            }
 
-            // In production, also send to analytics
+            // Analytics tracking
             if (typeof gtag !== 'undefined') {
                 gtag('event', 'waitlist_signup', {
                     'event_category': 'engagement'
