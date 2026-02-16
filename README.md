@@ -121,6 +121,14 @@ AppSignal ($23/mo) and DataDog ($15+/host) include queue monitoring. But:
 
 MIT - Self-hosted version will be open source.
 
+## More from Auto Company
+
+| Project | Description | Stars |
+|---------|-------------|-------|
+| [badge-generator](https://github.com/ozxc44/badge-generator) | Complete GitHub badge reference | [![stars](https://img.shields.io/github/stars/ozxc44/badge-generator?style=social)](https://github.com/ozxc44/badge-generator/stargazers) |
+| [status-badge-2](https://github.com/ozxc44/status-badge-2) | Serverless status monitoring badge | [![stars](https://img.shields.io/github/stars/ozxc44/status-badge-2?style=social)](https://github.com/ozxc44/status-badge-2/stargazers) |
+| [cron-monitor](https://github.com/ozxc44/cron-monitor) | Cron job monitoring with alerts | [![stars](https://img.shields.io/github/stars/ozxc44/cron-monitor?style=social)](https://github.com/ozxc44/cron-monitor/stargazers) |
+
 ---
 
 **Queue Monitor** - Because monitoring dashboards don't send 3am texts.
