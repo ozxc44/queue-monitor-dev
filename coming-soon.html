@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Queue Monitor - Queue Alerting, Not Monitoring</title>
+    <meta name="description" content="Get alerted when your background queues fail, back up, or stop processing. Works with RQ, Celery, BullMQ, Sidekiq, and more.">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #1a1a1a;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 3rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .tagline {
+            font-size: 1.25rem;
+            color: #666;
+            margin-bottom: 2rem;
+            font-weight: 500;
+        }
+
+        .tagline strong {
+            color: #764ba2;
+        }
+
+        .problem {
+            background: #fff3f3;
+            border-left: 4px solid #e53e3e;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .problem h3 {
+            color: #e53e3e;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .solution {
+            background: #f0fff4;
+            border-left: 4px solid #38a169;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .solution h3 {
+            color: #38a169;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .feature {
+            padding: 1rem;
+            background: #f7fafc;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .feature strong {
+            display: block;
+            margin-bottom: 0.25rem;
+            color: #2d3748;
+        }
+
+        .form-section {
+            text-align: center;
+            padding: 2rem 0;
+        }
+
+        .form-section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-section p {
+            color: #666;
+            margin-bottom: 1.5rem;
+        }
+
+        form {
+            display: flex;
+            gap: 0.5rem;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        input[type="email"] {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        input[type="email"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .supported {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .supported h3 {
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #718096;
+            margin-bottom: 1rem;
+        }
+
+        .badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            background: #edf2f7;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: #4a5568;
+        }
+
+        .vs-section {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: #f7fafc;
+            border-radius: 8px;
+        }
+
+        .vs-section h4 {
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+            color: #4a5568;
+        }
+
+        .vs-grid {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .vs-item {
+            text-align: center;
+            padding: 0.5rem;
+        }
+
+        .vs-item .name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .vs-item .desc {
+            font-size: 0.8rem;
+            color: #718096;
+        }
+
+        .vs-divider {
+            font-size: 1.5rem;
+            color: #cbd5e0;
+        }
+
+        .status {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .status.success {
+            background: #f0fff4;
+            color: #38a169;
+        }
+
+        .status.error {
+            background: #fff3f3;
+            color: #e53e3e;
+        }
+
+        @media (max-width: 600px) {
+            .card {
+                padding: 1.5rem;
+            }
+
+            h1 {
+                font-size: 1.75rem;
+            }
+
+            form {
+                flex-direction: column;
+            }
+
+            .vs-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .vs-divider {
+                transform: rotate(90deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>Queue Monitor</h1>
+            <p class="tagline"><strong>Queue Alerting,</strong> Not Monitoring.</p>
+
+            <div class="problem">
+                <h3>The Problem</h3>
+                <p>You deploy at 5pm. At 11pm, your email queue starts backing up. Workers crash, memory leaks, and your queue silently dies. You don't know until 8am when 500 angry customers email support asking "where's my confirmation?"</p>
+            </div>
+
+            <div class="solution">
+                <h3>The Solution</h3>
+                <p>At 11:15pm, you get a Slack alert: <strong>"email_queue depth > 1000 (threshold: 500)"</strong>. You check the dashboard, fix the issue, and go back to sleep. No users affected. No fires to fight.</p>
+            </div>
+
+            <div class="features">
+                <div class="feature">
+                    <strong>Queue Depth Alerts</strong>
+                    Know when queues back up before it's too late
+                </div>
+                <div class="feature">
+                    <strong>Failed Job Tracking</strong>
+                    Aggregate and alert on repeated failures
+                </div>
+                <div class="feature">
+                    <strong>Worker Heartbeat</strong>
+                    Get notified when workers go down
+                </div>
+                <div class="feature">
+                    <strong>Simple Setup</strong>
+                    5 lines of code, no complex agents
+                </div>
+            </div>
+
+            <div class="vs-section">
+                <h4>How we're different</h4>
+                <div class="vs-grid">
+                    <div class="vs-item">
+                        <div class="name">Flower / Horizon</div>
+                        <div class="desc">Great dashboard, but won't wake you up</div>
+                    </div>
+                    <div class="vs-divider">vs</div>
+                    <div class="vs-item">
+                        <div class="name">Queue Monitor</div>
+                        <div class="desc">Alerts you when something breaks</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h2>Get Early Access</h2>
+                <p>We're launching soon. Join the waitlist for <strong>50% off</strong> lifetime pricing.</p>
+                <form id="waitlist-form">
+                    <input type="email" id="email" placeholder="your@email.com" required>
+                    <button type="submit">Join Waitlist</button>
+                </form>
+                <div id="status"></div>
+            </div>
+
+            <div class="supported">
+                <h3>Launching with SDKs for:</h3>
+                <div class="badges">
+                    <span class="badge">Python RQ</span>
+                    <span class="badge">Celery</span>
+                    <span class="badge">BullMQ</span>
+                    <span class="badge">Bull</span>
+                    <span class="badge">Sidekiq</span>
+                    <span class="badge">Laravel Queue</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('waitlist-form');
+        const status = document.getElementById('status');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+
+            status.className = 'status';
+            status.textContent = 'Joining...';
+
+            // In production, this would send to your backend
+            // For now, we'll log to console and show success
+            console.log('Waitlist signup:', email);
+
+            // Store in localStorage for demo purposes
+            const waitlist = JSON.parse(localStorage.getItem('queue-monitor-waitlist') || '[]');
+            waitlist.push({
+                email,
+                timestamp: new Date().toISOString(),
+                source: window.location.href
+            });
+            localStorage.setItem('queue-monitor-waitlist', JSON.stringify(waitlist));
+
+            status.className = 'status success';
+            status.innerHTML = `
+                <strong>You're on the list!</strong><br>
+                We'll email you when we launch. Watch your inbox for that 50% off code.
+            `;
+
+            form.reset();
+
+            // In production, also send to analytics
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'waitlist_signup', {
+                    'event_category': 'engagement'
+                });
+            }
+        });
+
+        // Log page view for analytics
+        console.log('Queue Monitor coming soon page viewed');
+    </script>
+</body>
+</html>
