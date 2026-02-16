@@ -1,133 +1,126 @@
-# Queue Monitor - 验证阶段
+# Queue Monitor - Queue Alerting, Not Monitoring
 
-**状态**: 🧪 需求验证中
-**日期**: 2026-02-16
-
----
-
-## 关于此项目
-
-Queue Monitor 是一个"队列告警"服务，而不是"队列监控"服务。
-
-### 核心洞察
-
-**Flower, Horizon, Bull Board, Sidekiq Web** 都是优秀的监控仪表板。
-但它们不会在凌晨 3 点叫醒你。
-
-**Queue Monitor 会。**
-
-### 价值主张
-
-- **Queue Depth Alerts**: 队列深度超阈值告警
-- **Failed Job Tracking**: 失败任务聚合和告警
-- **Worker Heartbeat**: Worker 存活监控
-- **Simple Setup**: 5 行代码，无需复杂 Agent
+**Status**: 🧪 Validating Demand | **Launch**: [queue-monitor.dev](https://ozxc44.github.io/queue-monitor-dev/)
 
 ---
 
-## 验证策略
+## The Problem
 
-根据 Charlie Munger 的建议，我们在开发 MVP 前先验证需求。
+You deploy at 5pm. Everything looks great.
 
-### 验证条件
+At 11pm, your email queue starts backing up. A worker crashes, memory leaks, and the queue silently dies.
 
-- **成功**: > 50 人表达 Email 兴趣 → 继续 MVP 开发
-- **失败**: < 50 人 → Pivot 或放弃
+You don't know. You're asleep.
 
-### 验证方式
+At 8am, your inbox is full of "where's my confirmation email?" messages. You spend 2 hours firefighting and looking like an amateur.
 
-1. Coming Soon 页面（已创建）
-2. 社区发布（文案已准备）
-3. 收集 Email 注册数量
+**The problem isn't that you lack monitoring.** You have Flower running. The problem is that **monitoring doesn't wake you up.**
 
 ---
 
-## 文件清单
+## The Solution
 
-| 文件 | 用途 |
-|------|------|
-| `coming-soon.html` | 需求验证页面 |
-| `docs/marketing/queue-monitor/community-posts.md` | 社区发布文案 |
-| `docs/ceo/ceo-decision-026.md` | CEO 决策记录 |
-| `docs/critic/queue-monitor-premortem.md` | Munger 风险分析 |
+**Queue Monitor** - A service that alerts you when something goes wrong:
 
----
+- 🔔 **Queue Depth Alerts** - Know when queues back up before it's too late
+- ❌ **Failed Job Tracking** - Aggregate and alert on repeated failures
+- 💓 **Worker Heartbeat** - Get notified when workers go down
+- ⚡ **Simple Setup** - 5 lines of code, no complex agents
 
-## 下一步
-
-### 如果验证成功 (> 50 emails)
-
-**Phase 2: MVP 开发** (2 个周期)
-
-- **范围**: Python RQ SDK + 简单 Dashboard + Email/Slack 告警
-- **定价**: $9/月 (Pro)
-- **技术栈**: Cloudflare Workers + D1/KV
-
-**Phase 3: 发布** (1 个周期)
-
-- Product Hunt 发布
-- Reddit 发布
-- 收集用户反馈
-
-### 如果验证失败 (< 50 emails)
-
-- 分析反馈
-- 考虑 Pivot 到 "Developer Alerting Platform"
-- 或返回候选列表选择 #2 或 #3
+At 11:15pm, you get a Slack alert: `"email_queue depth > 1000 (threshold: 500)"`. You check the dashboard, fix the issue, and go back to sleep. No users affected. No fires to fight.
 
 ---
 
-## 定价策略（调整后）
+## How We're Different
 
-根据 Munger 建议：
-
-| 计划 | 原定价 | 调整后定价 |
-|------|--------|------------|
-| Free | $0 | $0 (1 queue) |
-| Pro | $15/月 | **$9/月** (5 queues) |
-| Team | $50/月 | $30/月 (unlimited) |
-| Bundle | - | **$20/月** (Cron + Queue) |
+| | Flower / Horizon / Bull Board | Queue Monitor |
+|---|---|---|
+| Great Dashboard | ✅ | ✅ |
+| Proactive Alerts | ❌ | ✅ |
+| Wakes you up at 3am | ❌ | ✅ |
 
 ---
 
-## 差异化策略
+## Pricing
 
-### Before (错误)
-> "Cross-platform queue monitoring service"
+Starting at **$9/mo** - Less than an hour of your time is worth.
 
-### After (正确)
-> "Queue Alerting, Not Monitoring"
+| Plan | Queues | Alerts | Price |
+|------|--------|--------|-------|
+| Free | 1 | Email only | $0 |
+| Pro | 5 | Email + Slack | $9/mo |
+| Team | Unlimited | Email + Slack + Webhook | $30/mo |
 
-### 对比
-
-| | Flower/Horizon | Queue Monitor |
-|---|---------------|---------------|
-| 监控仪表板 | ✅ | ✅ |
-| 主动告警 | ❌ | ✅ |
-| 凌晨 3 点叫醒你 | ❌ | ✅ |
+**Bundle Deal**: Get Cron Monitor + Queue Monitor for $20/mo.
 
 ---
 
-## 社区发布计划
+## Supported Technologies
 
-### 目标 Subreddits
+Launching with SDKs for:
 
-- r/Python
-- r/Django
-- r/Flask
-- r/node
-- r/laravel
-
-### Dev.to 文章
-
-标题: "Why Flower Doesn't Wake You Up When Your Queue Dies"
-
-### 成功指标
-
-- 50+ Email 注册
-- 正面社区反馈
-- 至少 10 人问 "什么时候能用？"
+- **Python**: RQ, Celery
+- **Node.js**: BullMQ, Bull
+- **Ruby**: Sidekiq
+- **PHP**: Laravel Queue
 
 ---
 
-**Auto Company** — 2026-02-16
+## Get Early Access
+
+We're launching soon. Join the waitlist for **50% off** lifetime pricing.
+
+👉 **[queue-monitor.dev](https://ozxc44.github.io/queue-monitor-dev/)**
+
+---
+
+## Validation Status
+
+Before building the full MVP, we're validating demand:
+
+- **Goal**: 50+ email signups to proceed with development
+- **Current**: [![Waitlist](https://img.shields.io/badge/waitlist-0%20%2F%2050-red)](https://ozxc44.github.io/queue-monitor-dev/)
+
+### Help us validate!
+
+1. Is queue alerting a problem you actually have?
+2. Would you pay $9/mo for peace of mind?
+3. What's your current setup for queue alerts?
+
+**Join the waitlist and let us know!**
+
+---
+
+## Why Not Just Use APM?
+
+AppSignal ($23/mo) and DataDog ($15+/host) include queue monitoring. But:
+
+1. They're overkill if you just want queue alerts
+2. Small teams don't want another complex tool
+3. $9/mo is easier to justify than $23+
+
+---
+
+## Roadmap
+
+### If validation succeeds (>50 signups):
+
+**Week 1-2**: Build MVP (Python RQ only)
+**Week 3**: Beta testing with waitlist
+**Week 4**: Public launch
+
+### If validation fails:
+
+- Analyze feedback
+- Consider pivot to "Developer Alerting Platform"
+- Or return to candidate list
+
+---
+
+## License
+
+MIT - Self-hosted version will be open source.
+
+---
+
+**Queue Monitor** - Because monitoring dashboards don't send 3am texts.
